@@ -3,11 +3,13 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;
+
     private Rigidbody2D rb;
     private Vector2 movement;
     private Animator animator;
     private Transform spriteTransform;
 
+    public int facingDirection = 1; 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -17,16 +19,31 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        
+        if (UIManager.instance != null && UIManager.instance.terminalUI.activeSelf)
+        {
+            movement = Vector2.zero;
+            animator.SetFloat("Speed", 0);
+            return;
+        }
+
+        
         movement.x = Input.GetAxisRaw("Horizontal");
         movement.y = Input.GetAxisRaw("Vertical");
 
         animator.SetFloat("Speed", movement.sqrMagnitude);
 
-        // Flip kiri kanan
+        
         if (movement.x > 0)
+        {
             spriteTransform.localScale = new Vector3(1, 1, 1);
+            facingDirection = 1;
+        }
         else if (movement.x < 0)
+        {
             spriteTransform.localScale = new Vector3(-1, 1, 1);
+            facingDirection = -1;
+        }
     }
 
     void FixedUpdate()
