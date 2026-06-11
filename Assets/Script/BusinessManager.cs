@@ -13,7 +13,6 @@ public class BusinessManager : MonoBehaviour
     [Header("Work Settings")]
     public bool isWorking = false;
     public float workTime = 3f;
-
     public int incomePerWork = 10;
 
     [Header("Upgrade System")]
@@ -64,7 +63,15 @@ public class BusinessManager : MonoBehaviour
 
         money += incomePerWork;
 
+        if (FloatingTextSpawner.instance != null)
+            FloatingTextSpawner.instance.SpawnText("+$" + incomePerWork);
+
+        if (AudioManager.instance != null)
+            AudioManager.instance.PlayCash();
+
         UpdateUI();
+
+        SaveGame();
 
         if (progressBar != null)
             progressBar.value = 0;
@@ -79,39 +86,53 @@ public class BusinessManager : MonoBehaviour
             money -= workUpgradeCost;
 
             workUpgradeLevel++;
-
-            // Income naik
             incomePerWork *= 2;
-
-            // Harga upgrade berikutnya naik
             workUpgradeCost *= 2;
 
             UpdateUI();
+            SaveGame();
+            if (AudioManager.instance != null)
+                AudioManager.instance.PlayUpgrade();
 
             Debug.Log("Work Upgraded!");
         }
         else
         {
             Debug.Log("Not enough money!");
+            if (AudioManager.instance != null)
+                AudioManager.instance.PlayError();
         }
     }
 
-    void UpdateUI()
+    public void UpdateUI()
     {
         if (moneyText != null)
             moneyText.text = "Money: $" + money;
 
         if (workUpgradeText != null)
-            workUpgradeText.text =
-                "Upgrade Work ($" + workUpgradeCost + ")";
+            workUpgradeText.text = "Upgrade Work ($" + workUpgradeCost + ")";
     }
 
     public void SaveGame()
     {
         PlayerPrefs.SetInt("Money", money);
+
         PlayerPrefs.SetInt("IncomePerWork", incomePerWork);
         PlayerPrefs.SetInt("WorkUpgradeLevel", workUpgradeLevel);
         PlayerPrefs.SetInt("WorkUpgradeCost", workUpgradeCost);
+
+        if (NightclubManager.instance != null)
+        {
+            PlayerPrefs.SetInt("NightclubStorageMoney", NightclubManager.instance.storageMoney);
+            PlayerPrefs.SetInt("NightclubMaxStorage", NightclubManager.instance.maxStorage);
+            PlayerPrefs.SetInt("NightclubPassiveIncome", NightclubManager.instance.passiveIncome);
+
+            PlayerPrefs.SetInt("NightclubUpgradeLevel", NightclubManager.instance.nightclubUpgradeLevel);
+            PlayerPrefs.SetInt("NightclubUpgradeCost", NightclubManager.instance.nightclubUpgradeCost);
+
+            PlayerPrefs.SetInt("StorageUpgradeLevel", NightclubManager.instance.storageUpgradeLevel);
+            PlayerPrefs.SetInt("StorageUpgradeCost", NightclubManager.instance.storageUpgradeCost);
+        }
 
         PlayerPrefs.Save();
 
@@ -122,10 +143,26 @@ public class BusinessManager : MonoBehaviour
     {
         if (PlayerPrefs.HasKey("Money"))
         {
-            money = PlayerPrefs.GetInt("Money");
+            money = PlayerPrefs.GetInt("Money", 0);
+
             incomePerWork = PlayerPrefs.GetInt("IncomePerWork", 10);
             workUpgradeLevel = PlayerPrefs.GetInt("WorkUpgradeLevel", 1);
             workUpgradeCost = PlayerPrefs.GetInt("WorkUpgradeCost", 50);
+
+            if (NightclubManager.instance != null)
+            {
+                NightclubManager.instance.storageMoney = PlayerPrefs.GetInt("NightclubStorageMoney", 0);
+                NightclubManager.instance.maxStorage = PlayerPrefs.GetInt("NightclubMaxStorage", 1000);
+                NightclubManager.instance.passiveIncome = PlayerPrefs.GetInt("NightclubPassiveIncome", 10);
+
+                NightclubManager.instance.nightclubUpgradeLevel = PlayerPrefs.GetInt("NightclubUpgradeLevel", 1);
+                NightclubManager.instance.nightclubUpgradeCost = PlayerPrefs.GetInt("NightclubUpgradeCost", 100);
+
+                NightclubManager.instance.storageUpgradeLevel = PlayerPrefs.GetInt("StorageUpgradeLevel", 1);
+                NightclubManager.instance.storageUpgradeCost = PlayerPrefs.GetInt("StorageUpgradeCost", 150);
+
+                NightclubManager.instance.UpdateUI();
+            }
 
             UpdateUI();
 
@@ -150,6 +187,15 @@ public class BusinessManager : MonoBehaviour
         if (NightclubManager.instance != null)
         {
             NightclubManager.instance.storageMoney = 0;
+            NightclubManager.instance.maxStorage = 1000;
+            NightclubManager.instance.passiveIncome = 10;
+
+            NightclubManager.instance.nightclubUpgradeLevel = 1;
+            NightclubManager.instance.nightclubUpgradeCost = 100;
+
+            NightclubManager.instance.storageUpgradeLevel = 1;
+            NightclubManager.instance.storageUpgradeCost = 150;
+
             NightclubManager.instance.UpdateUI();
         }
 
